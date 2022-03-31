@@ -21,7 +21,7 @@ are overdue tasks in the calendar (surrounded by red), the user can
 adjust the number of work hours/day under “edit view” to see how many
 hours/day are required to complete tasks on time.
 
-The calendar is automatically saved onto the device when the session
+The calendar is automatically saved to the device when the session
 closes. The calendar can also be exported to Google Calendar through a
 downloadable csv file (when importing the csv in Google Calendar, the
 blocks of tasks from the Shiny App will be added to the corresponding
