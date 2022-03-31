@@ -8,7 +8,7 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-![](images/paste-E74A1B94.png)
+![](paste-E74A1B94.png)
 
 ### Purpose
 
