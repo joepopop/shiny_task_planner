@@ -25,4 +25,4 @@ The calendar is automatically saved to the device when the session
 closes. The calendar can also be exported to Google Calendar through a
 downloadable csv file (when importing the csv in Google Calendar, the
 blocks of tasks from the Shiny App will be added to the corresponding
-day, starting at 10 am.
+day, starting at 10 am.)
