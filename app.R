@@ -261,7 +261,7 @@ server <- function(input, output, session) {
     
     # calendar
     output$distPlot <- renderPlot({
-      req(length(processed_dat()$task) > 0)
+      req(length(values$task_dat$task) > 0)
       processed_dat() %>% 
           ggplot(aes(x = day_of_week, y = hours_per_task, fill = priority_level)) +
               geom_col(
