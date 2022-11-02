@@ -2,7 +2,7 @@ Simplifying personal task management using R Shiny
 ================
 Joe Omatoi
 
-![](paste-E74A1B94.png)
+![](sample_screenshot.png)
 
 ### Purpose
 
