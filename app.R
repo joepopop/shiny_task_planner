@@ -1,4 +1,4 @@
-# packages ----------------------------------------------------------------
+# load packages ----
 library(tidyverse)
 library(lubridate)
 library(shiny)
@@ -7,7 +7,7 @@ library(bslib)
 library(thematic)
 library(shinyjs)
 
-# apply thematic over ggplot in server code
+# apply thematic over ggplot in server code ---- 
 thematic_shiny(
     bg = "auto",
     fg = "auto",
@@ -18,23 +18,23 @@ thematic_shiny(
     inherit = FALSE,
     session = shiny::getDefaultReactiveDomain()
     )
-
 light <- bs_theme(version = 4, bootswatch = "lux", primary = "#75B3CE")
-# dark <- bs_theme(version = 4, bootswatch = "lux", bg = "black", fg = "white", primary = "purple")
 
-# UI ----------------------------------------------------------------------
+# define UI ----- 
 ui <- fluidPage(
   
-  useShinyjs(),
+    # enable shinyjs functions
+    useShinyjs(),
   
-  # load theme
-  theme = light, 
-  
+    # load theme
+    theme = light, 
+    
+    # leave title blank for cleaner look
     titlePanel(""),
-
+    
+    # define inputs options on sidebar
     sidebarLayout(
         sidebarPanel(
-          # checkboxInput("dark_mode", "Dark theme"),
           h6("Edit view"),
           sliderInput(
               inputId = "hours_per_day",
@@ -146,21 +146,14 @@ ui <- fluidPage(
     )
 )
 
-
-
-# server ------------------------------------------------------------------
+# define server ----
 server <- function(input, output, session) {
     
   # limit number of characters in textInput 
   shinyjs::runjs("$('#name').attr('maxlength', 15)")
   shinyjs::runjs("$('#name_2').attr('maxlength', 15)")
   
-  ## activate dark theme check box
-  # observe(session$setCurrentTheme(
-  #   if (isTRUE(input$dark_mode)) dark else light
-  # ))
-  
-  # load data
+  # load initial data that contains tasks as rows and characteristics as columns
   task_dat <- tibble(
     task = character(),
     deadline = as.Date(character()),
@@ -168,18 +161,19 @@ server <- function(input, output, session) {
     hours_per_task = numeric(),
     interval = interval(),
     cum_hours_per_task = numeric()
-  ) %>% 
+    ) %>% 
     arrange(desc(priority_level)) %>% 
     arrange(deadline)
   
     values <- reactiveValues(task_dat = NULL)
  
+    # load previous data if exists    
     if (file.exists("task_dat.rds")) 
       {values$task_dat <- read_rds("task_dat.rds")} 
     else 
       {values$task_dat <- task_dat}
     
-  # add, remove, and save data  
+  # add tasks to calendar when "Add" is clicked
     observeEvent(input$add, {
       req(input$name)
       req(input$priority_level)
@@ -197,6 +191,7 @@ server <- function(input, output, session) {
       values$task_dat <- temp
     })
     
+    # remove tasks from calendar when "Remove" is clicked
     observeEvent(input$remove, {
       req(input$name_2)
       req(input$task_hour)
@@ -209,24 +204,27 @@ server <- function(input, output, session) {
       values$task_dat <- temp
     })
     
+    # clear tasks from calendar when "Clear" is clicked
     observeEvent(input$clear, {
       temp <- values$task_dat %>% 
         slice(0)
       values$task_dat <- temp
     })
     
+    # save calendar automatically when app closes
     save_function <- session$onSessionEnded(function() {
       isolate(write_rds(values$task_dat, "task_dat.rds"))
     })
     
     # process data
     processed_dat <- reactive({
+      # create a dataset with date information
       date_dat <- tibble(
         day = today(tzone = "US/Central") + days(0:364),
         week = isoweek(day),
         month = month(day, label = TRUE, abbr = TRUE),
         day_of_week = wday(day, label = TRUE, abbr = TRUE)
-      ) %>%
+        ) %>%
         filter(if (input$weekend == F) (day_of_week != "Sun" & day_of_week != "Sat") else day_of_week != "nothing") %>%
         select(month, week, day, day_of_week) %>% 
         mutate(
@@ -234,6 +232,7 @@ server <- function(input, output, session) {
           id = row_number(),
           day_label = str_replace(str_sub(day, 6, 10), "-", "/")
         ) 
+      # combine task dataset with date dataset and assign dates to tasks
       values$task_dat %>% 
           mutate(
             hours_per_task = 0.5,
@@ -253,13 +252,13 @@ server <- function(input, output, session) {
             )
     })
     
-    # table
+    # output table for debugging
     output$mytable = DT::renderDataTable({
       req(length(values$task_dat$task) > 0)
       processed_dat()
     })
     
-    # calendar
+    # output calendar
     output$distPlot <- renderPlot({
       req(length(values$task_dat$task) > 0)
       processed_dat() %>% 
@@ -314,7 +313,7 @@ server <- function(input, output, session) {
     width = 900
     )
     
-    # export data
+    # further process processed data to make it ready for export
     export_dat <- reactive({
       processed_dat() %>%
         select(task, day, hours_per_task) %>%
@@ -334,7 +333,7 @@ server <- function(input, output, session) {
         )
     })
 
-
+    # export data as CSV
     output$export <- downloadHandler(
       filename = function(file) {
         "clarify.csv"
@@ -346,6 +345,5 @@ server <- function(input, output, session) {
 }
 
 
-# run app -----------------------------------------------------------------
-
+# run app ----
 shinyApp(ui, server)
